@@ -1,3 +1,40 @@
+export enum NotificationStatusEnum {
+    INFO = 'info',
+    WARNING = 'warning',
+    ERROR = 'error',
+    SUCCESS = 'success'
+}
+export enum NotificationOperationEnum {
+    CREATE = 'create',
+    UPDATE = 'update',
+    DELETE = 'delete',
+    OTHER = 'other'
+}
+export enum NotificationEntityEnum {
+    OBSERVATORY = 'observatory',
+    PRODUCT = 'product',
+    CATALOG = 'catalog',
+    USER_PROFILE = 'user_profile',
+    DATA_SOURCE = 'data_source',
+    TASK = 'task',
+    NONE = 'none',
+    OTHER = 'other'
+}
+
+export interface Notification {
+    notification_id: string;
+    user_id: string;
+    status: NotificationStatusEnum;
+    operation: NotificationOperationEnum;
+    entity: NotificationEntityEnum;
+    entity_id: string | null;
+    title: string;
+    message: string;
+    is_read: boolean;
+    created_at: string;
+}
+
+
 export interface ObservatoryDTO {
     observatory_id: string
     title: string
@@ -20,4 +57,141 @@ export interface ProductXDTO {
 
 export interface SearchQueryDTO {
     query: string
+}
+
+export interface AppearanceSettings {
+    theme: 'light' | 'dark' | 'system';
+    font_size: number;
+    reduce_animations: boolean;
+}
+export interface ExplorationSettings {
+    enable_tutorial: boolean;
+    default_view: 'list' | 'grid';
+    items_per_page: number;
+}
+export interface ExportSettings {
+    default_format: 'yml' | 'json';
+    include_metadata: boolean;
+}
+export interface UserSettings {
+    appearance: AppearanceSettings;
+    exploration: ExplorationSettings;
+    export: ExportSettings;
+}
+
+export interface UserProfile {
+    user_id: string;
+    fullname: string;
+    first_name: string;
+    last_name: string;
+    username: string;
+    email: string;
+    profile_photo: string;
+    created_at: string;
+    updated_at: string;
+    settings: UserSettings
+}
+export interface JubAuthResponseDTO{
+    access_token: string;
+    temporal_secret_key: string;
+    user_profile: UserProfile;
+}
+
+
+
+export interface VerifyDTO {
+    access_token: string;
+    username: string;
+    secret: string;
+}
+export interface LogoutDTO{
+    access_token: string;
+    username: string;
+}
+
+export interface AuthAttemptDTO {
+    username: string;
+    password: string;
+    scope: string;
+    expiration: string;
+    renew_token: boolean;
+}
+
+export interface User {
+    user_id?: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+    fullname: string;
+    email: string;
+    profile_photo: string;
+    // role?: string;
+}
+
+export interface AuthResponseDTO{
+    username: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    profile_photo: string;
+    access_token: string;
+    temporal_secret: string;
+    metadata: Record<string, any>;
+    role?: string;
+}
+
+export interface CatalogSummaryDTO {
+  catalog_id: string;
+  name: string;
+  value: string;
+  catalog_type: string;
+}
+
+export interface CatalogItemAliasDTO {
+  catalog_item_alias_id: string;
+  value: string;
+  value_type: string;
+  description?: string;
+}
+
+export interface CatalogItemDTO {
+  catalog_item_id: string;
+  name: string;
+  value: string;
+  code: number;
+  value_type: string;
+  temporal_value?: string | null;
+  description?: string;
+  aliases: CatalogItemAliasDTO[];
+  children: CatalogItemDTO[];
+}
+
+export interface CatalogResponseDTO {
+  catalog_id: string;
+  name: string;
+  value: string;
+  catalog_type: string;
+  description?: string;
+  items: CatalogItemDTO[];
+}
+
+export type DataSourceFormat = 'csv' | 'json' | 'postgres' | 'mysql' | 'mongodb';
+
+export interface DataSourceDTO {
+  source_id: string;
+  name: string;
+  description: string;
+  format: DataSourceFormat;
+  bucket_id?: string | null;
+  connection_uri?: string | null;
+}
+
+export interface DataRecord {
+  record_id: string;
+  source_id: string;
+  spatial_id: string;
+  temporal_id: string;
+  interest_ids: string[];
+  numerical_interest_ids: Record<string, number>;
+  raw_payload: Record<string, unknown>;
 }

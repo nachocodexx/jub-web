@@ -2,7 +2,7 @@
   <v-navigation-drawer app permanent v-model="drawerModel" rail>
     <v-list>
       <v-list-item class="cursor-pointer"
-        :prepend-avatar="`https://api.dicebear.com/9.x/bottts/svg?seed=${currentUser?.first_name}`"
+        :prepend-avatar="`https://api.dicebear.com/9.x/bottts/svg?seed=${currentUser?.fullname}`"
         :title="`${currentUser?.first_name} ${currentUser?.last_name}`" :to="{ 'name': 'UserProfile' }">
         <template v-slot:append>
           <v-btn icon="mdi-chevron-left" variant="text"></v-btn>
@@ -16,10 +16,16 @@
     <v-list density="compact" nav>
       <v-list-item prepend-icon="mdi-home-city" title="Observatories" value="observatories"
         :to="{ 'name': 'Dashboard' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-chart-line" title="Graficas" value="charts"
+        :to="{ 'name': 'Charts' }"></v-list-item>
       <v-list-item prepend-icon="mdi-book-open" title="Catalogs" value="catalogs"
         :to="{ 'name': 'Catalogs' }"></v-list-item>
       <v-list-item prepend-icon="mdi-clipboard-text" title="Tasks" value="tasks"
         :to="{ 'name': 'TasksIndex' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-database-outline" title="Fuentes de Datos" value="datasources"
+        :to="{ 'name': 'DataSources' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-help-circle-outline" title="Guía de Búsqueda" value="query-guide"
+        :to="{ 'name': 'QueryGuide' }"></v-list-item>
       <v-list-item prepend-icon="mdi-cog" title="Settings" value="settings" :to="{ 'name': 'Settings' }"></v-list-item>
       <v-list-item prepend-icon="mdi-logout" title="Logout" value="logout" @click="logout"></v-list-item>
     </v-list>
