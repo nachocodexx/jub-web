@@ -28,5 +28,5 @@ send_to_prod.sh
 sync-prod-envs.sh
 CLAUDE.md
 .claude
-package-lock.json
+#package-lock.json
 *.lock
