@@ -4,7 +4,7 @@
     <!-- Header -->
     <v-row class="mb-6" align="center">
       <v-col cols="12" md="7">
-        <h1 class="text-h4 font-weight-black mb-1">Fuentes de Datos</h1>
+        <h1 class="text-h4 font-weight-black mb-1">Fuentes de datos</h1>
         <p class="text-body-1 text-grey-darken-1">
           Conjuntos de datos indexados disponibles para consulta y análisis.
         </p>

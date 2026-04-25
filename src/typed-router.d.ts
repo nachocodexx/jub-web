@@ -25,6 +25,8 @@ declare module 'vue-router/auto-routes' {
     'Dashboard': RouteRecordInfo<'Dashboard', '/dashboard', Record<never, never>, Record<never, never>>,
     'DataSources': RouteRecordInfo<'DataSources', '/datasources', Record<never, never>, Record<never, never>>,
     'DataSourceDetail': RouteRecordInfo<'DataSourceDetail', '/datasources/:sourceId', { sourceId: ParamValue<true> }, { sourceId: ParamValue<false> }>,
+    'ExternalIndex': RouteRecordInfo<'ExternalIndex', '/external', Record<never, never>, Record<never, never>>,
+    'ExternalServices': RouteRecordInfo<'ExternalServices', '/external/services', Record<never, never>, Record<never, never>>,
     'Guides': RouteRecordInfo<'Guides', '/guides', Record<never, never>, Record<never, never>>,
     'QueryGuide': RouteRecordInfo<'QueryGuide', '/guides/query', Record<never, never>, Record<never, never>>,
     'Observatories': RouteRecordInfo<'Observatories', '/observatories', Record<never, never>, Record<never, never>>,
@@ -34,7 +36,7 @@ declare module 'vue-router/auto-routes' {
     'IMA': RouteRecordInfo<'IMA', '/observatories/ima', Record<never, never>, Record<never, never>>,
     'Kaexla': RouteRecordInfo<'Kaexla', '/observatories/kaexla', Record<never, never>, Record<never, never>>,
     'Products': RouteRecordInfo<'Products', '/products', Record<never, never>, Record<never, never>>,
-    'Charts': RouteRecordInfo<'Charts', '/products/plot', Record<never, never>, Record<never, never>>,
+    '/products/plot': RouteRecordInfo<'/products/plot', '/products/plot', Record<never, never>, Record<never, never>>,
     'Services': RouteRecordInfo<'Services', '/services', Record<never, never>, Record<never, never>>,
     'MictlanX': RouteRecordInfo<'MictlanX', '/services/mictlanx', Record<never, never>, Record<never, never>>,
     'Nez': RouteRecordInfo<'Nez', '/services/nez', Record<never, never>, Record<never, never>>,
@@ -87,6 +89,14 @@ declare module 'vue-router/auto-routes' {
       routes: 'DataSourceDetail'
       views: never
     }
+    'src/pages/external/index.vue': {
+      routes: 'ExternalIndex'
+      views: never
+    }
+    'src/pages/external/services.vue': {
+      routes: 'ExternalServices'
+      views: never
+    }
     'src/pages/guides/index.vue': {
       routes: 'Guides'
       views: never
@@ -124,7 +134,7 @@ declare module 'vue-router/auto-routes' {
       views: never
     }
     'src/pages/products/plot.vue': {
-      routes: 'Charts'
+      routes: '/products/plot'
       views: never
     }
     'src/pages/services/index.vue': {

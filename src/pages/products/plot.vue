@@ -4,7 +4,7 @@
     <!-- Header -->
     <v-row class="mb-6" align="center">
       <v-col cols="12" md="8">
-        <h1 class="text-h4 font-weight-black mb-1">Generador de Gráficas</h1>
+        <h1 class="text-h4 font-weight-black mb-1">Generador de gráficas</h1>
         <p class="text-body-1 text-grey-darken-1">
           Selecciona una fuente de datos, configura los filtros y genera gráficos interactivos.
         </p>
@@ -566,23 +566,20 @@ function resolveStr(val: string | { value: string } | null | undefined): string 
 function buildGroup(arr: string[], op: string) { return arr.join(` ${op} `); }
 
 function buildFilterDSL(): string {
-  let dsl = 'jub.v1.';
-  if (form.value.vs.length > 0) dsl += `VS(${buildGroup(form.value.vs, operators.value.vs)}).`;
-  if (form.value.vt.length > 0) dsl += `VT(${buildGroup(form.value.vt, operators.value.vt)}).`;
-  if (form.value.vi.length > 0) dsl += `VI(${buildGroup(form.value.vi, operators.value.vi)}).`;
-  return dsl.endsWith('.') ? dsl.slice(0, -1) : dsl;
+  const vs = form.value.vs.length > 0 ? buildGroup(form.value.vs, operators.value.vs) : '*';
+  const vt = form.value.vt.length > 0 ? buildGroup(form.value.vt, operators.value.vt) : '*';
+  const vi = form.value.vi.length > 0 ? buildGroup(form.value.vi, operators.value.vi) : '*';
+  return `jub.v1.VS(${vs}).VT(${vt}).VI(${vi})`;
 }
 
 // ── DSL ───────────────────────────────────────────────────────────────────────
 const computedDSL = computed(() => {
   let dsl = buildFilterDSL();
-  if (!dsl.endsWith('.')) dsl += '.';
-  else dsl = dsl.slice(0, -1) + '.';
   const voVar = resolveStr(form.value.voVar);
-  if (voVar) dsl += `VO(${form.value.voOp}(${voVar})).`;
   const by = resolveStr(form.value.by);
-  if (by) dsl += `BY(${by})`;
-  return dsl.endsWith('.') ? dsl.slice(0, -1) : dsl;
+  if (voVar) dsl += `.VO(${form.value.voOp}(${voVar}))`;
+  if (by) dsl += `.BY(${by})`;
+  return dsl;
 });
 
 const isValid = computed(() => resolveStr(form.value.voVar).length > 0);

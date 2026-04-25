@@ -35,6 +35,40 @@ export interface Notification {
 }
 
 
+export enum TaskStatusEnum {
+    PENDING = 'pending',
+    RUNNING = 'running',
+    SUCCESS = 'success',
+    FAILED = 'failed',
+}
+
+export enum TaskOperationEnum {
+    CREATE = 'create',
+    UPDATE = 'update',
+    DELETE = 'delete',
+    SYNC = 'sync',
+}
+
+export interface TaskXDTO {
+    task_id: string;
+    user_id: string;
+    observatory_id: string;
+    title: string;
+    description: string;
+    operation: TaskOperationEnum;
+    current_status: TaskStatusEnum;
+    progress_message: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface TasksStatsDTO {
+    pending: number;
+    running: number;
+    success: number;
+    failed: number;
+}
+
 export interface ObservatoryDTO {
     observatory_id: string
     title: string
@@ -175,6 +209,21 @@ export interface CatalogResponseDTO {
   items: CatalogItemDTO[];
 }
 
+export type CatalogType = 'INTEREST' | 'TEMPORAL' | 'SPATIAL' | 'OBSERVABLE' | 'REFERENCE';
+
+export interface CatalogItemXResponseDTO {
+  catalog_item_id: string;
+  name: string;
+  value: string;
+  code: number;
+  value_type: string;
+  catalog_type: CatalogType | null;
+  temporal_value: string | null;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type DataSourceFormat = 'csv' | 'json' | 'postgres' | 'mysql' | 'mongodb';
 
 export interface DataSourceDTO {
@@ -194,4 +243,59 @@ export interface DataRecord {
   interest_ids: string[];
   numerical_interest_ids: Record<string, number>;
   raw_payload: Record<string, unknown>;
+}
+
+// ── External Services ─────────────────────────────────────────────────────────
+
+export interface BuildingBlockDetailDTO {
+  building_block_id: string;
+  name: string;
+  command: string;
+  image: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PatternDetailDTO {
+  pattern_id: string;
+  name: string;
+  task: string;
+  pattern: string;
+  description: string;
+  workers: number;
+  loadbalancer: string;
+  building_block?: BuildingBlockDetailDTO | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StageDetailDTO {
+  stage_id: string;
+  name: string;
+  source: string;
+  sink: string;
+  endpoint: string;
+  transformation?: PatternDetailDTO | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowDetailDTO {
+  workflow_id: string;
+  name: string;
+  stages: StageDetailDTO[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ServiceDTO {
+  service_id: string;
+  name: string;
+  description: string;
+  owner_id: string;
+  public: boolean;
+  workflow?: WorkflowDetailDTO | null;
+  created_at: string;
+  updated_at: string;
 }

@@ -7,7 +7,7 @@
       class="text-none font-weight-bold mb-4 px-0"
       :to="{ name: 'DataSources' }"
     >
-      Volver a Fuentes de Datos
+      Volver a Fuentes de datos
     </v-btn>
 
     <!-- Loading header -->

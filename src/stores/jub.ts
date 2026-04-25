@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {type CatalogResponseDTO,type CatalogItemAliasDTO,type CatalogItemDTO ,type CatalogSummaryDTO, type Notification,type ObservatoryDTO,type ProductXDTO,type UserSettings, type DataSourceDTO, type DataRecord} from '@/types/index.types'
+import {type CatalogResponseDTO,type CatalogItemAliasDTO,type CatalogItemDTO ,type CatalogSummaryDTO, type Notification,type ObservatoryDTO,type ProductXDTO,type UserSettings, type DataSourceDTO, type DataRecord, type TaskXDTO, type TasksStatsDTO, type ServiceDTO, type CatalogItemXResponseDTO} from '@/types/index.types'
 // interface Observatory
 
 
@@ -356,6 +356,50 @@ export const useJubStore = defineStore('jub', () => {
     return result;
   }
 
+  async function searchServices(query: string, skip = 0, limit = 100): Promise<ServiceDTO[]> {
+    try {
+      isLoading.value = true;
+      const response = await fetch(`${API_URL}/search/services`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, skip, limit }),
+      });
+      if (!response.ok) throw new Error(response.statusText);
+      return await response.json() as ServiceDTO[];
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      return [];
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function fetchDescendantDslValues(catalogType: string, parentValue: string): Promise<string[]> {
+    if (catalogs.value.length === 0) await fetchCatalogs();
+    const matching = catalogs.value.filter(c => c.catalog_type === catalogType);
+    const results: string[] = [];
+
+    function collectLeaves(items: CatalogItemDTO[], capturing: boolean): void {
+      for (const item of items) {
+        const active = capturing || item.value === parentValue;
+        if (active && !(item.children?.length)) {
+          results.push(catalogType === 'TEMPORAL' ? String(item.code) : item.value);
+        }
+        if (item.children?.length) collectLeaves(item.children, active);
+      }
+    }
+
+    for (const cat of matching) {
+      try {
+        const resp = await fetch(`${API_URL}/catalogs/${cat.catalog_id}`, { headers: authHeaders() });
+        if (!resp.ok) continue;
+        const data = await resp.json();
+        collectLeaves(data.items ?? [], false);
+      } catch { /* skip */ }
+    }
+    return [...new Set(results)];
+  }
+
   async function generatePlot(query: string, chartType: string, observatoryId?: string): Promise<any> {
     try {
       isLoading.value = true;
@@ -408,6 +452,65 @@ export const useJubStore = defineStore('jub', () => {
     }
   }
 
+  async function fetchTasksStats(): Promise<TasksStatsDTO> {
+    try {
+      isLoading.value = true;
+      const response = await fetch(`${API_URL}/tasks/stats`, { headers: authHeaders() });
+      if (!response.ok) throw new Error(response.statusText);
+      return await response.json() as TasksStatsDTO;
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      return { pending: 0, running: 0, success: 0, failed: 0 };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function fetchTasks(): Promise<TaskXDTO[]> {
+    try {
+      isLoading.value = true;
+      const response = await fetch(`${API_URL}/tasks`, { headers: authHeaders() });
+      if (!response.ok) throw new Error(response.statusText);
+      return await response.json() as TaskXDTO[];
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      return [];
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function fetchTask(taskId: string): Promise<TaskXDTO | null> {
+    try {
+      isLoading.value = true;
+      const response = await fetch(`${API_URL}/tasks/${taskId}`, { headers: authHeaders() });
+      if (!response.ok) throw new Error(response.statusText);
+      return await response.json() as TaskXDTO;
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function retryTask(taskId: string): Promise<boolean> {
+    try {
+      isLoading.value = true;
+      const response = await fetch(`${API_URL}/tasks/${taskId}/retry`, {
+        method: 'PUT',
+        headers: authHeaders(),
+      });
+      if (!response.ok) throw new Error(response.statusText);
+      return true;
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   async function queryDataSource(sourceId: string, query: string, limit = 100, skip = 0): Promise<DataRecord[]> {
     try {
       isLoading.value = true;
@@ -423,6 +526,37 @@ export const useJubStore = defineStore('jub', () => {
       return [];
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  async function fetchProductTagDetails(productId: string): Promise<CatalogItemXResponseDTO[]> {
+    try {
+      const response = await fetch(`${API_URL}/products/${productId}/tags/details`, {
+        headers: authHeaders(),
+      });
+      if (!response.ok) throw new Error(response.statusText);
+      return await response.json() as CatalogItemXResponseDTO[];
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      return [];
+    }
+  }
+
+  async function downloadProduct(productId: string): Promise<{ url: string | null; type: string | null }> {
+    try {
+      const response = await fetch(`${API_URL}/products/${productId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Temporal-Secret-Key': `${localStorage.getItem('secret')}`,
+        },
+      });
+      if (!response.ok) throw new Error(response.statusText);
+      const blob = await response.blob();
+      const type = blob.type || response.headers.get('content-type') || 'application/octet-stream';
+      return { url: URL.createObjectURL(blob), type };
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      return { url: null, type: null };
     }
   }
 
@@ -445,8 +579,16 @@ export const useJubStore = defineStore('jub', () => {
         fetchDataSources,
         fetchDataSource,
         queryDataSource,
+        fetchTasksStats,
+        fetchTasks,
+        fetchTask,
+        retryTask,
         fetchCatalogItemsByType,
+        fetchDescendantDslValues,
+        searchServices,
         generatePlot,
+        fetchProductTagDetails,
+        downloadProduct,
         reset,
         catalogs
     }
