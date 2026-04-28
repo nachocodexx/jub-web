@@ -1,5 +1,5 @@
 <template>
-  <dashboard-drawer :model-value="drawer" />
+  <dashboard-drawer v-model="drawer" />
 
   <v-app-bar app color="white" elevation="0" height="72" class="px-2 border-b">
     <template v-slot:prepend>
@@ -113,9 +113,10 @@ import { useJubStore } from '@/stores/jub';
 import { type Notification } from '@/types/index.types';
 import { useAuthStore } from '@/stores/auth';
 import { getRelativeTime } from '@/utils/date';
-import { useTheme } from 'vuetify';
+import { useDisplay, useTheme } from 'vuetify';
 
-const drawer = ref(true);
+const { mobile } = useDisplay();
+const drawer = ref(!mobile.value);
 const router = useRouter();
 
 const onBack = () => {
