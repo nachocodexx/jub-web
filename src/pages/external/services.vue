@@ -68,7 +68,7 @@
                     <v-list-item v-bind="itemProps">
                       <template #prepend>
                         <v-avatar size="20" rounded="0" class="mr-2">
-                          <v-img v-if="providerLogo[item.value]" :src="providerLogo[item.value]!" contain />
+                          <v-img v-if="providerLogo[item.value as ServiceProvider]" :src="providerLogo[item.value as ServiceProvider]!" contain />
                           <v-icon v-else size="16" color="grey">mdi-cog-outline</v-icon>
                         </v-avatar>
                       </template>

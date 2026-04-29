@@ -111,9 +111,8 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useJubStore } from '@/stores/jub';
 import { type Notification } from '@/types/index.types';
-import { useAuthStore } from '@/stores/auth';
 import { getRelativeTime } from '@/utils/date';
-import { useDisplay, useTheme } from 'vuetify';
+import { useDisplay } from 'vuetify';
 
 const { mobile } = useDisplay();
 const drawer = ref(!mobile.value);
@@ -127,8 +126,6 @@ const showNotifications = ref(false);
 
 
 const jubStore = useJubStore();
-const authStore = useAuthStore();
-const theme = useTheme();
 
 const notifications = ref<Notification[]>([]);
 
@@ -196,10 +193,7 @@ const markAllAsRead = async () => {
 
 
 onMounted(async () => {
-  // Cargar notificaciones desde el store
   notifications.value = await jubStore.get_notifications();
-  const x = await jubStore.convert_theme_to_jub_format(authStore.settings?.appearance?.theme || 'jubThemeLight');
-  theme.change(x);
 });
 
 </script>
