@@ -852,7 +852,7 @@ const copiedSnack   = ref(false);
 const advancedMode  = ref(false);
 const advancedQuery = ref('');
 
-function onToggleAdvanced(val: boolean) {
+function onToggleAdvanced(val: boolean | null) {
   if (val) advancedQuery.value = computedDSL.value;
 }
 
@@ -893,7 +893,7 @@ const tagNameMap = computed(() => {
   const map = new Map<string, string>();
   for (const list of Object.values(items.value)) {
     for (const item of list) {
-      const name = item.title.split(' (')[0];
+      const name = item.title?.split(' (')[0] ?? 'Unknown';
       map.set(item.value, name);
     }
   }

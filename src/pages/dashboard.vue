@@ -432,7 +432,7 @@ async function copyDSL() {
   copiedSnack.value = true;
 }
 
-function onToggleAdvanced(val: boolean) {
+function onToggleAdvanced(val: boolean | null) {
   if (val) advancedQuery.value = computedDSL.value;
 }
 
