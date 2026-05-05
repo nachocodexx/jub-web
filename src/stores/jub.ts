@@ -211,7 +211,7 @@ export const useJubStore = defineStore('jub', () => {
             isLoading.value = false
         }
     }
-    async function search_observatories(query:string,strict:boolean): Promise<ObservatoryDTO[]>{
+    async function search_observatories(query:string,strict:boolean, skip = 0, limit = 24): Promise<ObservatoryDTO[]>{
         try{
             isLoading.value = true;
             const response = await fetch(`${API_URL}/search/observatories`, {
@@ -219,7 +219,7 @@ export const useJubStore = defineStore('jub', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ query,strict })
+                body: JSON.stringify({ query,strict, skip, limit })
             });
             if(response.ok){
                 const data:ObservatoryDTO[] = await response.json();
@@ -493,10 +493,10 @@ export const useJubStore = defineStore('jub', () => {
     }
   }
 
-  async function fetchTasks(): Promise<TaskXDTO[]> {
+  async function fetchTasks(skip = 0, limit = 20): Promise<TaskXDTO[]> {
     try {
       isLoading.value = true;
-      const response = await fetch(`${API_URL}/tasks`, { headers: authHeaders() });
+      const response = await fetch(`${API_URL}/tasks?skip=${skip}&limit=${limit}`, { headers: authHeaders() });
       if (!response.ok) throw new Error(response.statusText);
       return await response.json() as TaskXDTO[];
     } catch (e) {

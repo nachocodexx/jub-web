@@ -23,7 +23,7 @@
                   <v-avatar color="blue" variant="tonal" size="28" rounded="lg">
                     <v-icon size="16">mdi-map-marker-outline</v-icon>
                   </v-avatar>
-                  <span class="text-subtitle-2 font-weight-bold">Región geográfica</span>
+                  <span class="text-subtitle-2 font-weight-bold">Variable Espacial</span>
                   <v-chip size="x-small" color="blue" variant="tonal" class="font-monospace font-weight-black">VS</v-chip>
                   <v-tooltip location="top" max-width="280" text="Filtra por entidad, estado o país. Selecciona una o varias regiones de la lista.">
                     <template #activator="{ props: tp }">
@@ -75,7 +75,7 @@
                   <v-avatar color="teal" variant="tonal" size="28" rounded="lg">
                     <v-icon size="16">mdi-calendar-outline</v-icon>
                   </v-avatar>
-                  <span class="text-subtitle-2 font-weight-bold">Período de tiempo</span>
+                  <span class="text-subtitle-2 font-weight-bold">Variable Temporal</span>
                   <v-chip size="x-small" color="teal" variant="tonal" class="font-monospace font-weight-black">VT</v-chip>
                   <v-tooltip location="top" max-width="280" text="Filtra por año o período. Se envía el código numérico del período (ej: 2024).">
                     <template #activator="{ props: tp }">
@@ -126,7 +126,7 @@
                   <v-avatar color="green" variant="tonal" size="28" rounded="lg">
                     <v-icon size="16">mdi-tag-outline</v-icon>
                   </v-avatar>
-                  <span class="text-subtitle-2 font-weight-bold">Categoría de interés</span>
+                  <span class="text-subtitle-2 font-weight-bold">Variable de Interés</span>
                   <v-chip size="x-small" color="green" variant="tonal" class="font-monospace font-weight-black">VI</v-chip>
                   <v-tooltip location="top" max-width="280" text="Variables de clasificación como sexo, grupo de edad, diagnóstico, etc.">
                     <template #activator="{ props: tp }">
@@ -334,6 +334,21 @@
       </v-col>
     </v-row>
 
+    <!-- Load more -->
+    <v-row v-if="canLoadMore && !jubStore.isLoading" justify="center" class="mt-6">
+      <v-col cols="auto">
+        <v-btn
+          variant="tonal"
+          color="primary"
+          rounded="pill"
+          :loading="loadingMore"
+          prepend-icon="mdi-chevron-down"
+          class="px-8 font-weight-bold text-none"
+          @click="loadMore"
+        >Cargar más</v-btn>
+      </v-col>
+    </v-row>
+
     <!-- No results after search -->
     <v-row
       v-else-if="searchCounter > 0 && filteredObservatories.length === 0 && !jubStore.isLoading"
@@ -382,6 +397,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { type ObservatoryDTO, type ObservatoryStatsDTO } from '@/types/index.types';
 import { useJubStore } from '@/stores/jub';
+import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 
 definePage({
@@ -389,8 +405,9 @@ definePage({
   meta: { requiresAuth: true, layout: 'dashboard' },
 });
 
-const router   = useRouter();
-const jubStore = useJubStore();
+const router    = useRouter();
+const jubStore  = useJubStore();
+const authStore = useAuthStore();
 
 const showCreateDialog      = ref(false);
 const filteredObservatories = ref<ObservatoryDTO[]>([]);
@@ -403,6 +420,10 @@ const advancedMode          = ref(false);
 const advancedQuery         = ref('');
 const statsLoading          = ref(false);
 const statsMap              = ref(new Map<string, ObservatoryStatsDTO>());
+const skip                  = ref(0);
+const loadingMore           = ref(false);
+const canLoadMore           = ref(false);
+const pageSize              = computed(() => authStore.settings?.exploration?.items_per_page ?? 12);
 const items = ref<Record<'VS' | 'VT' | 'VI', Array<{ title: string; value: string }>>>({
   VS: [], VT: [], VI: [],
 });
@@ -443,9 +464,11 @@ function resetForm() {
 
 async function executeSearch() {
   searchCounter.value++;
+  skip.value = 0;
   statsMap.value = new Map();
   const query = advancedMode.value ? advancedQuery.value : computedDSL.value;
-  filteredObservatories.value = await jubStore.search_observatories(query, strict.value);
+  filteredObservatories.value = await jubStore.search_observatories(query, strict.value, 0, pageSize.value);
+  canLoadMore.value = filteredObservatories.value.length === pageSize.value;
   if (filteredObservatories.value.length > 0) {
     statsLoading.value = true;
     const ids = filteredObservatories.value.map(o => o.observatory_id);
@@ -455,6 +478,23 @@ async function executeSearch() {
     statsMap.value = m;
     statsLoading.value = false;
   }
+}
+
+async function loadMore() {
+  loadingMore.value = true;
+  skip.value += pageSize.value;
+  const query = advancedMode.value ? advancedQuery.value : computedDSL.value;
+  const more = await jubStore.search_observatories(query, strict.value, skip.value, pageSize.value);
+  filteredObservatories.value.push(...more);
+  canLoadMore.value = more.length === pageSize.value;
+  if (more.length > 0) {
+    const ids = more.map(o => o.observatory_id);
+    const list = await jubStore.fetchObservatoryStats(ids);
+    const m = new Map(statsMap.value);
+    for (const s of list) m.set(s.observatory_id, s);
+    statsMap.value = m;
+  }
+  loadingMore.value = false;
 }
 
 function goToDetails(obs: ObservatoryDTO) {

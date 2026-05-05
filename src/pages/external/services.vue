@@ -331,6 +331,21 @@
       </v-list>
     </v-card>
 
+    <!-- ── Load more ── -->
+    <v-row v-if="canLoadMore && !jubStore.isLoading" justify="center" class="mt-6">
+      <v-col cols="auto">
+        <v-btn
+          variant="tonal"
+          color="primary"
+          rounded="pill"
+          :loading="loadingMore"
+          prepend-icon="mdi-chevron-down"
+          class="px-8 font-weight-bold text-none"
+          @click="loadMore"
+        >Cargar más</v-btn>
+      </v-col>
+    </v-row>
+
     <!-- ── No results ── -->
     <v-row
       v-else-if="searchCounter > 0 && services.length === 0 && !jubStore.isLoading"
@@ -622,6 +637,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import { useJubStore } from '@/stores/jub';
+import { useAuthStore } from '@/stores/auth';
 import type { ServiceDTO, ServiceProvider, PatternDetailDTO, BuildingBlockDetailDTO } from '@/types/index.types';
 import nezLogo from '@/assets/nez.png';
 import xelhuaLogo from '@/assets/xelhua.png';
@@ -631,7 +647,8 @@ definePage({
   meta: { requiresAuth: true, layout: 'dashboard' },
 });
 
-const jubStore = useJubStore();
+const jubStore  = useJubStore();
+const authStore = useAuthStore();
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 const providerLogo: Record<ServiceProvider, string | null> = {
@@ -687,10 +704,25 @@ const searchCounter = ref(0);
 const services      = ref<ServiceDTO[]>([]);
 const viewMode      = ref<'grid' | 'list'>('grid');
 const strict        = ref(false);
+const skip          = ref(0);
+const loadingMore   = ref(false);
+const canLoadMore   = ref(false);
+const pageSize      = computed(() => authStore.settings?.exploration?.items_per_page ?? 24);
 
 async function executeSearch() {
   searchCounter.value++;
-  services.value = await jubStore.searchServices(computedDSL.value, 0, 100, strict.value);
+  skip.value = 0;
+  services.value = await jubStore.searchServices(computedDSL.value, 0, pageSize.value, strict.value);
+  canLoadMore.value = services.value.length === pageSize.value;
+}
+
+async function loadMore() {
+  loadingMore.value = true;
+  skip.value += pageSize.value;
+  const more = await jubStore.searchServices(computedDSL.value, skip.value, pageSize.value, strict.value);
+  services.value.push(...more);
+  canLoadMore.value = more.length === pageSize.value;
+  loadingMore.value = false;
 }
 
 // ── Detail dialog ─────────────────────────────────────────────────────────────
@@ -735,8 +767,7 @@ const allBlocks = computed((): BuildingBlockDetailDTO[] => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  searchCounter.value++;
-  services.value = await jubStore.searchServices(computedDSL.value, 0, 100, strict.value);
+  await executeSearch();
 });
 </script>
 

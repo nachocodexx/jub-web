@@ -32,7 +32,7 @@
                   <v-avatar color="blue" variant="tonal" size="28" rounded="lg">
                     <v-icon size="16">mdi-map-marker-outline</v-icon>
                   </v-avatar>
-                  <span class="text-subtitle-2 font-weight-bold">Región geográfica</span>
+                  <span class="text-subtitle-2 font-weight-bold">Variable Espacial</span>
                   <v-chip size="x-small" color="blue" variant="tonal" class="font-monospace font-weight-black">VS</v-chip>
                   <v-tooltip location="top" max-width="280" text="Filtra por entidad, estado o país. Selecciona una o varias regiones de la lista.">
                     <template #activator="{ props: tp }">
@@ -83,7 +83,7 @@
                   <v-avatar color="teal" variant="tonal" size="28" rounded="lg">
                     <v-icon size="16">mdi-calendar-outline</v-icon>
                   </v-avatar>
-                  <span class="text-subtitle-2 font-weight-bold">Período de tiempo</span>
+                  <span class="text-subtitle-2 font-weight-bold">Variable Temporal</span>
                   <v-chip size="x-small" color="teal" variant="tonal" class="font-monospace font-weight-black">VT</v-chip>
                   <v-tooltip location="top" max-width="280" text="Filtra por año o período. Se envía el código numérico del período (ej: 2024).">
                     <template #activator="{ props: tp }">
@@ -134,7 +134,7 @@
                   <v-avatar color="green" variant="tonal" size="28" rounded="lg">
                     <v-icon size="16">mdi-tag-outline</v-icon>
                   </v-avatar>
-                  <span class="text-subtitle-2 font-weight-bold">Categoría de interés</span>
+                  <span class="text-subtitle-2 font-weight-bold">Variable de Interés</span>
                   <v-chip size="x-small" color="green" variant="tonal" class="font-monospace font-weight-black">VI</v-chip>
                   <v-tooltip location="top" max-width="280" text="Variables de clasificación como sexo, grupo de edad, diagnóstico, etc.">
                     <template #activator="{ props: tp }">
@@ -364,6 +364,21 @@
       </v-col>
     </v-row>
 
+    <!-- ── Load more ── -->
+    <v-row v-if="canLoadMore && !jubStore.isLoading && viewMode === 'grid'" justify="center" class="mt-6">
+      <v-col cols="auto">
+        <v-btn
+          variant="tonal"
+          color="primary"
+          rounded="pill"
+          :loading="loadingMore"
+          prepend-icon="mdi-chevron-down"
+          class="px-8 font-weight-bold text-none"
+          @click="loadMore"
+        >Cargar más</v-btn>
+      </v-col>
+    </v-row>
+
     <!-- ── Table placeholder ── -->
     <v-row v-else-if="viewMode === 'table' && filteredProducts.length > 0">
       <v-col cols="12">
@@ -381,8 +396,6 @@
           image="https://vuetifyjs.b-cdn.net/docs/images/components/v-empty-state/astro-cat.svg"
           headline="Sin productos asociados"
           title="No hay productos que coincidan con esta consulta."
-          text="Puedes programar una nueva tarea para generar los datos que necesitas."
-          action-text="Crear un observatorio"
           @click:action="showCreateDialog = true"
           color="primary"
           action-color="black"
@@ -885,6 +898,7 @@ function extensionIcon(ext?: string): string {
   if (['png', 'jpg', 'jpeg', 'gif', 'tiff'].includes(e)) return 'mdi-image';
   if (e === 'pdf') return 'mdi-file-pdf-box';
   if (e === 'txt') return 'mdi-file-document-outline';
+  if (e == "html") return 'mdi-language-html5';
   return 'mdi-file-outline';
 }
 
@@ -905,19 +919,39 @@ const searchCounter    = ref(0);
 const filteredProducts = ref<ProductXDTO[]>([]);
 const viewMode         = ref<'grid' | 'table'>('grid');
 const strict           = ref(false);
-const currentPage      = 0;
-const itemsPerPage     = 10;
+const skip             = ref(0);
+const loadingMore      = ref(false);
+const canLoadMore      = ref(false);
+const pageSize         = computed(() => authStore.settings?.exploration?.items_per_page ?? 24);
 
 async function executeSearch() {
   searchCounter.value++;
+  skip.value = 0;
   const query = advancedMode.value ? advancedQuery.value : computedDSL.value;
   filteredProducts.value = await jubStore.search(
     query,
     route.params.observatory_id as string,
-    currentPage,
-    itemsPerPage,
+    0,
+    pageSize.value,
     strict.value,
   );
+  canLoadMore.value = filteredProducts.value.length === pageSize.value;
+}
+
+async function loadMore() {
+  loadingMore.value = true;
+  skip.value += pageSize.value;
+  const query = advancedMode.value ? advancedQuery.value : computedDSL.value;
+  const more = await jubStore.search(
+    query,
+    route.params.observatory_id as string,
+    skip.value,
+    pageSize.value,
+    strict.value,
+  );
+  filteredProducts.value.push(...more);
+  canLoadMore.value = more.length === pageSize.value;
+  loadingMore.value = false;
 }
 
 // ── Product overlay ───────────────────────────────────────────────────────────
