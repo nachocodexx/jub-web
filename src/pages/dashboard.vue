@@ -15,7 +15,7 @@
         <v-card rounded="xl" elevation="3" class="border">
           <v-card-text class="pa-6">
 
-            <v-row>
+            <v-row v-if="!advancedMode">
 
               <!-- ── VS: Espacio ── -->
               <v-col cols="12" md="4">
@@ -173,6 +173,19 @@
 
             </v-row>
 
+            <v-textarea
+              v-else
+              v-model="advancedQuery"
+              label="Consulta DSL"
+              placeholder="jub.v1.VS(*).VT(*).VI(*)"
+              variant="outlined"
+              density="comfortable"
+              rows="3"
+              hide-details
+              class="font-monospace"
+              hint="Escribe directamente la consulta DSL."
+            />
+
             <v-divider class="my-5" />
 
             <!-- Bottom bar: DSL + actions -->
@@ -185,12 +198,36 @@
                 <code
                   class="text-caption font-monospace px-2 py-1 rounded-lg text-primary text-truncate"
                   style="background: rgba(var(--v-theme-primary), .08); max-width: 380px; display: block;"
-                >{{ computedDSL }}</code>
+                >{{ advancedMode ? advancedQuery : computedDSL }}</code>
                 <v-btn icon="mdi-content-copy" variant="text" size="x-small" color="grey" @click="copyDSL" />
               </div>
 
               <!-- Actions -->
-              <div class="d-flex ga-2 align-center flex-shrink-0">
+              <div class="d-flex ga-2 align-center flex-shrink-0 flex-wrap">
+                <v-switch
+                  v-model="advancedMode"
+                  label="Modo avanzado"
+                  density="compact"
+                  hide-details
+                  color="primary"
+                  class="flex-shrink-0"
+                  @update:model-value="onToggleAdvanced"
+                />
+                <div class="d-flex align-center ga-1">
+                  <v-checkbox
+                    v-model="strict"
+                    label="Búsqueda estricta"
+                    density="compact"
+                    hide-details
+                    color="primary"
+                    class="flex-shrink-0"
+                  />
+                  <v-tooltip location="top" max-width="300" text="En modo estricto todos los términos de la consulta deben coincidir exactamente con los datos del observatorio.">
+                    <template #activator="{ props: tp }">
+                      <v-icon v-bind="tp" size="16" color="grey-lighten-1" class="cursor-help">mdi-help-circle-outline</v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <v-btn
                   variant="text"
                   color="grey-darken-1"
@@ -278,7 +315,13 @@
         :key="obs.observatory_id"
         cols="12" sm="6" md="4"
       >
-        <ObservatoryCard :observatory="obs" @show-details="goToDetails" class="h-100" />
+        <ObservatoryCard
+          :observatory="obs"
+          :stats="statsMap.get(obs.observatory_id)"
+          :stats-loading="statsLoading"
+          @show-details="goToDetails"
+          class="h-100"
+        />
       </v-col>
     </v-row>
 
@@ -337,7 +380,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
-import { type ObservatoryDTO } from '@/types/index.types';
+import { type ObservatoryDTO, type ObservatoryStatsDTO } from '@/types/index.types';
 import { useJubStore } from '@/stores/jub';
 import { useRouter } from 'vue-router';
 
@@ -355,7 +398,11 @@ const viewMode              = ref<'grid' | 'table'>('grid');
 const searchCounter         = ref(0);
 const loadingItems          = ref(false);
 const copiedSnack           = ref(false);
-
+const strict                = ref(false);
+const advancedMode          = ref(false);
+const advancedQuery         = ref('');
+const statsLoading          = ref(false);
+const statsMap              = ref(new Map<string, ObservatoryStatsDTO>());
 const items = ref<Record<'VS' | 'VT' | 'VI', Array<{ title: string; value: string }>>>({
   VS: [], VT: [], VI: [],
 });
@@ -381,8 +428,12 @@ const computedDSL = computed(() => {
 });
 
 async function copyDSL() {
-  await navigator.clipboard.writeText(computedDSL.value);
+  await navigator.clipboard.writeText(advancedMode.value ? advancedQuery.value : computedDSL.value);
   copiedSnack.value = true;
+}
+
+function onToggleAdvanced(val: boolean) {
+  if (val) advancedQuery.value = computedDSL.value;
 }
 
 function resetForm() {
@@ -392,7 +443,18 @@ function resetForm() {
 
 async function executeSearch() {
   searchCounter.value++;
-  filteredObservatories.value = await jubStore.search_observatories(computedDSL.value);
+  statsMap.value = new Map();
+  const query = advancedMode.value ? advancedQuery.value : computedDSL.value;
+  filteredObservatories.value = await jubStore.search_observatories(query, strict.value);
+  if (filteredObservatories.value.length > 0) {
+    statsLoading.value = true;
+    const ids = filteredObservatories.value.map(o => o.observatory_id);
+    const list = await jubStore.fetchObservatoryStats(ids);
+    const m = new Map<string, ObservatoryStatsDTO>();
+    for (const s of list) m.set(s.observatory_id, s);
+    statsMap.value = m;
+    statsLoading.value = false;
+  }
 }
 
 function goToDetails(obs: ObservatoryDTO) {

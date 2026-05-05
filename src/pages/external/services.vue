@@ -115,7 +115,22 @@
                 <v-btn icon="mdi-content-copy" variant="text" size="x-small" color="grey" @click="copyDSL" />
               </div>
 
-              <div class="d-flex ga-2 align-center flex-shrink-0">
+              <div class="d-flex ga-2 align-center flex-shrink-0 flex-wrap">
+                <div class="d-flex align-center ga-1">
+                  <v-checkbox
+                    v-model="strict"
+                    label="Búsqueda estricta"
+                    density="compact"
+                    hide-details
+                    color="primary"
+                    class="flex-shrink-0"
+                  />
+                  <v-tooltip location="top" max-width="300" text="En modo estricto todos los términos deben coincidir exactamente con el nombre o descripción del servicio.">
+                    <template #activator="{ props: tp }">
+                      <v-icon v-bind="tp" size="16" color="grey-lighten-1" class="cursor-help">mdi-help-circle-outline</v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <v-btn
                   variant="text"
                   color="grey-darken-1"
@@ -671,10 +686,11 @@ async function copyDSL() {
 const searchCounter = ref(0);
 const services      = ref<ServiceDTO[]>([]);
 const viewMode      = ref<'grid' | 'list'>('grid');
+const strict        = ref(false);
 
 async function executeSearch() {
   searchCounter.value++;
-  services.value = await jubStore.searchServices(computedDSL.value, 0, 100);
+  services.value = await jubStore.searchServices(computedDSL.value, 0, 100, strict.value);
 }
 
 // ── Detail dialog ─────────────────────────────────────────────────────────────
@@ -720,7 +736,7 @@ const allBlocks = computed((): BuildingBlockDetailDTO[] => {
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
   searchCounter.value++;
-  services.value = await jubStore.searchServices(computedDSL.value, 0, 100);
+  services.value = await jubStore.searchServices(computedDSL.value, 0, 100, strict.value);
 });
 </script>
 
