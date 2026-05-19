@@ -28,7 +28,7 @@
       </v-tooltip>
       <v-tooltip location="end" text="Servicios" :disabled="mobile">
         <template #activator="{ props: tip }">
-          <v-list-item v-bind="tip" prepend-icon="mdi-api" title="Servicios" value="services"
+          <v-list-item v-bind="tip" prepend-icon="mdi-sitemap" title="Servicios" value="services"
             :to="{ name: 'ExternalServices' }" />
         </template>
       </v-tooltip>

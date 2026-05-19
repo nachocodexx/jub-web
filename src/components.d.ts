@@ -34,5 +34,6 @@ declare module 'vue' {
     ServiceAppBar: typeof import('./components/ServiceAppBar.vue')['default']
     StatsSection: typeof import('./components/landing/sections/StatsSection.vue')['default']
     ValueProposition: typeof import('./components/landing/sections/ValueProposition.vue')['default']
+    VerifyBanner: typeof import('./components/VerifyBanner.vue')['default']
   }
 }
