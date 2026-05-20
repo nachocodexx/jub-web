@@ -2,7 +2,7 @@
   <v-container max-width="1400" class="py-8">
 
     <v-row justify="center" class="mb-8 mt-2">
-      <v-col cols="12" lg="10">
+      <v-col cols="12" >
 
         <div class="text-center mb-6" data-tour="dash-header">
           <h1 class="text-h3 font-weight-black mb-2">Observatorios</h1>
@@ -218,7 +218,7 @@
               </div>
 
               <!-- Actions -->
-              <div class="d-flex ga-2 align-center flex-wrap" data-tour="dash-controls">
+              <div class="d-flex ga-2 ga-md-4 align-center flex-wrap" data-tour="dash-controls">
                 <v-switch
                   v-model="advancedMode"
                   label="Modo avanzado"
@@ -229,22 +229,34 @@
                   class="flex-shrink-0"
                   @update:model-value="onToggleAdvanced"
                 />
-                <div class="d-flex align-center ga-1">
-                  <v-switch
-                    v-model="strict"
-                    label="Búsqueda estricta"
-                    density="compact"
-                    hide-details
-                    color="deep-purple"
-                    inset
-                    class="flex-shrink-0"
-                  />
-                  <v-tooltip location="top" max-width="300" text="En modo estricto todos los términos de la consulta deben coincidir exactamente con los datos del observatorio.">
-                    <template #activator="{ props: tp }">
-                      <v-icon v-bind="tp" size="16" color="grey-lighten-1" class="cursor-help">mdi-help-circle-outline</v-icon>
-                    </template>
-                  </v-tooltip>
-                </div>
+                <v-tooltip location="top" max-width="300" text="En modo estricto todos los términos de la consulta deben coincidir exactamente con los datos del observatorio.">
+                  <template #activator="{ props: tp }">
+                    <v-switch
+                      v-bind="tp"
+                      v-model="strict"
+                      label="Búsqueda estricta"
+                      density="compact"
+                      hide-details
+                      color="deep-purple"
+                      inset
+                      class="flex-shrink-0"
+                    />
+                  </template>
+                </v-tooltip>
+                <v-tooltip location="top" max-width="300" text="Omite el caché del servidor y fuerza una consulta fresca a la base de datos.">
+                  <template #activator="{ props: tp }">
+                    <v-switch
+                      v-bind="tp"
+                      v-model="noCache"
+                      label="Sin caché"
+                      density="compact"
+                      hide-details
+                      color="amber-darken-2"
+                      inset
+                      class="flex-shrink-0"
+                    />
+                  </template>
+                </v-tooltip>
                 <v-btn
                   variant="text"
                   color="grey-darken-1"
@@ -337,6 +349,9 @@
           </v-chip>
           <v-chip v-if="strict" size="x-small" color="deep-purple" variant="tonal" prepend-icon="mdi-format-letter-case-upper" class="font-weight-bold">
             Búsqueda estricta
+          </v-chip>
+          <v-chip v-if="noCache" size="x-small" color="amber-darken-2" variant="tonal" prepend-icon="mdi-cached" class="font-weight-bold">
+            Sin caché
           </v-chip>
         </v-col>
         <v-col cols="auto">
@@ -488,6 +503,7 @@ const reloadItems           = async (key: 'VS' | 'VT' | 'VI') => {
 };
 const copiedSnack           = ref(false);
 const strict                = ref(false);
+const noCache               = ref(false);
 const advancedMode          = ref(false);
 const advancedQuery         = ref('');
 const statsLoading          = ref(false);
@@ -597,7 +613,7 @@ async function executeSearch() {
   skip.value = 0;
   statsMap.value = new Map();
   const query = advancedMode.value ? advancedQuery.value : computedDSL.value;
-  const results = await jubStore.search_observatories(query, strict.value, 0, pageSize.value);
+  const results = await jubStore.search_observatories(query, strict.value, 0, pageSize.value, noCache.value);
   filteredObservatories.value = results.slice().sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0));
   canLoadMore.value = results.length === pageSize.value;
   if (filteredObservatories.value.length > 0) {
@@ -615,7 +631,7 @@ async function loadMore() {
   loadingMore.value = true;
   skip.value += pageSize.value;
   const query = advancedMode.value ? advancedQuery.value : computedDSL.value;
-  const more = await jubStore.search_observatories(query, strict.value, skip.value, pageSize.value);
+  const more = await jubStore.search_observatories(query, strict.value, skip.value, pageSize.value, noCache.value);
   const sorted = more.slice().sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0));
   filteredObservatories.value.push(...sorted);
   canLoadMore.value = more.length === pageSize.value;

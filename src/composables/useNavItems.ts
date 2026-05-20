@@ -36,6 +36,7 @@ export const menuItems: MenuItem[] = [
     items: [
       { title: 'Artículos científicos', hasDropdown: false, route: '/resources/articles' },
       { title: 'Reportes técnicos',     hasDropdown: false, route: '/resources/reports'  },
+      { title: 'Guías',                 hasDropdown: false, route: '/resources/guides'  },
     ],
   },
   { title: 'Contacto', hasDropdown: false, route: '/contact' },

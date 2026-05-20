@@ -3,7 +3,7 @@
 
     <!-- ── Search form ── -->
     <v-row justify="center" class="mb-8 mt-2">
-      <v-col cols="12">
+      <v-col cols="12" >
 
         <div class="text-center mb-6">
           <h1 class="text-h3 font-weight-black mb-2">Productos</h1>
@@ -1157,6 +1157,18 @@
 
   </v-container>
 
+  <!-- ── Jub Assistant widget ── -->
+  <JubAssistant
+    :obs-id="obsId"
+    :observatory-title="observatory?.title ?? ''"
+    :vs-items="items.VS"
+    :vt-items="items.VT"
+    :vi-items="items.VI"
+    :products="filteredProducts"
+    :services="observatory?.services ?? []"
+    :data-sources="observatory?.data_sources ?? []"
+  />
+
   <!-- ── Observatory info drawer ── -->
   <v-navigation-drawer
     v-model="infoDrawer"
@@ -1218,6 +1230,7 @@
 
         <v-divider class="mb-4" />
 
+        
         <div v-if="observatory.services?.length" class="mb-4">
           <div class="text-caption font-weight-bold text-grey-darken-2 mb-2 text-uppercase" style="letter-spacing: 0.05em;">Servicios</div>
           <div class="d-flex flex-wrap ga-1">
@@ -1267,6 +1280,7 @@ import { useAppStore, SnackbarColor } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
 import { getRelativeTime } from '@/utils/date';
 import { useRoute, useRouter } from 'vue-router';
+import { useAssistantStore } from '@/stores/assistant';
 // import { type RouteNamedMap } from 'vue-router'
 // import { useRoute,useRouter } from 'unplugin-vue-router/runtime'
 
@@ -1279,11 +1293,19 @@ definePage({
   },
 });
 
-const route      = useRoute<'ObservatoryDetails'>();
-const router     = useRouter();
-const jubStore   = useJubStore();
-const appStore   = useAppStore();
-const authStore  = useAuthStore();
+const route          = useRoute<'ObservatoryDetails'>();
+const router         = useRouter();
+const jubStore       = useJubStore();
+const appStore       = useAppStore();
+const authStore      = useAuthStore();
+const assistantStore = useAssistantStore();
+
+watch(() => assistantStore.pendingQuery, (query) => {
+  if (query) {
+    applySuggestion(query)
+    assistantStore.pendingQuery = null
+  }
+})
 const currentUserId = computed(() => authStore.getUser()?.user_id ?? '');
 
 // ── Form state ────────────────────────────────────────────────────────────────
@@ -1877,6 +1899,8 @@ onMounted(async () => {
     jubStore.fetchCatalogItemsByType('INTEREST'),
   ]);
   observatory.value  = enriched;
+  console.log('Observatory enriched data:', enriched);
+  
   items.value        = { VS, VT, VI };
   loadingItems.value = false;
   await executeSearch();

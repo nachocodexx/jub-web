@@ -39,6 +39,7 @@ declare module 'vue-router/auto-routes' {
     'Charts': RouteRecordInfo<'Charts', '/products/plot', Record<never, never>, Record<never, never>>,
     'Resources': RouteRecordInfo<'Resources', '/resources', Record<never, never>, Record<never, never>>,
     'ResourcesArticles': RouteRecordInfo<'ResourcesArticles', '/resources/articles', Record<never, never>, Record<never, never>>,
+    '/resources/guides': RouteRecordInfo<'/resources/guides', '/resources/guides', Record<never, never>, Record<never, never>>,
     'ResourcesReports': RouteRecordInfo<'ResourcesReports', '/resources/reports', Record<never, never>, Record<never, never>>,
     'Services': RouteRecordInfo<'Services', '/services', Record<never, never>, Record<never, never>>,
     'MictlanX': RouteRecordInfo<'MictlanX', '/services/mictlanx', Record<never, never>, Record<never, never>>,
@@ -146,6 +147,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/resources/articles.vue': {
       routes: 'ResourcesArticles'
+      views: never
+    }
+    'src/pages/resources/guides.vue': {
+      routes: '/resources/guides'
       views: never
     }
     'src/pages/resources/reports.vue': {

@@ -8,6 +8,28 @@
     
     <template v-slot:append>
 
+      <!-- Jub Assistant button (only on observatory detail page) -->
+      <v-tooltip
+        v-if="assistantStore.isAvailable"
+        :model-value="assistantStore.showTooltip"
+        location="bottom"
+        no-click-animation
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon
+            variant="text"
+            class="mr-1 jub-assistant-btn"
+            @click="assistantStore.isOpen = !assistantStore.isOpen"
+          >
+          <v-icon size="30" color="primary">mdi-robot</v-icon>
+            <!-- <v-img src="@/assets/logo.svg" width="30" height="30" /> -->
+          </v-btn>
+        </template>
+        <span>¿Necesitas ayuda con las consultas de este observatorio?</span>
+      </v-tooltip>
+
       <!-- Download queue panel -->
       <v-menu
         v-model="showDownloads"
@@ -227,6 +249,12 @@
     </template>
   </v-app-bar>
 
+  <!-- Jub Assistant panels (rendered at layout level for proper z-index) -->
+  <template v-if="assistantStore.isAvailable">
+    <JubAssistantDrawer v-if="mdAndUp" />
+    <JubAssistantModal  v-else />
+  </template>
+
   <v-main>
     <router-view />
   </v-main>
@@ -236,11 +264,14 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useJubStore } from '@/stores/jub';
+import { useAssistantStore } from '@/stores/assistant';
 import { type Notification } from '@/types/index.types';
 import { getRelativeTime } from '@/utils/date';
 import { useDisplay } from 'vuetify';
+import { V } from 'node_modules/vitest/dist/chunks/evaluatedModules.d.BxJ5omdx';
 
-const { mobile } = useDisplay();
+const { mobile, mdAndUp } = useDisplay();
+const assistantStore = useAssistantStore();
 const drawer = ref(!mobile.value);
 const router = useRouter();
 
@@ -349,5 +380,19 @@ onMounted(async () => {
 <style scoped>
 .v-list-item {
   transition: background-color 0.2s ease;
+}
+
+@keyframes jub-heartbeat {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0   rgba(0, 171, 220, 0.5); }
+  20%  { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(0, 171, 220, 0);  }
+  35%  { transform: scale(1); }
+  50%  { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(0, 171, 220, 0);  }
+  80%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+.jub-assistant-btn {
+  animation: jub-heartbeat 3.5s ease-in-out infinite;
+  border-radius: 50%;
 }
 </style>

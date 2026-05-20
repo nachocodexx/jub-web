@@ -174,6 +174,8 @@ export const useAuthStore = defineStore('auth', () => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+                    "Temporal-Secret-Key": localStorage.getItem("secret") || ""
                 },
                 body: JSON.stringify(payload),
             });

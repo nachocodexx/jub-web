@@ -111,7 +111,7 @@
             <v-divider class="my-5" />
 
             <!-- Bottom bar: DSL preview + actions -->
-            <div class="d-flex align-center justify-space-between flex-wrap ga-3">
+            <div class="d-flex flex-column flex-md-row align-md-center justify-md-space-between ga-3">
 
               <div class="d-flex align-center ga-2 flex-wrap min-w-0">
                 <v-icon size="small" color="grey-darken-1">mdi-code-braces</v-icon>
@@ -122,6 +122,7 @@
                 >{{ computedDSL }}</code>
                 <v-btn icon="mdi-content-copy" variant="text" size="x-small" color="grey" @click="copyDSL" />
               </div>
+
 
               <div class="d-flex ga-2 align-center flex-shrink-0 flex-wrap" data-tour="svc-controls">
                 <div class="d-flex align-center ga-1">

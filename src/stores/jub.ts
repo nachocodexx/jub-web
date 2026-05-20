@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {type CatalogResponseDTO,type CatalogItemAliasDTO,type CatalogItemDTO ,type CatalogSummaryDTO, type Notification,type ObservatoryDTO,type ObservatoryStatsDTO,type ProductXDTO,type UserSettings, type DataSourceDTO, type DataRecord, type TaskXDTO, type TasksStatsDTO, type ServiceDTO, type CatalogItemXResponseDTO, type ReviewDTO, type SearchSuggestionResponseDTO, type ObservatorySuggestionResponseDTO} from '@/types/index.types'
+import {type CatalogResponseDTO,type CatalogItemAliasDTO,type CatalogItemDTO ,type CatalogSummaryDTO, type Notification,type ObservatoryDTO,type ObservatoryStatsDTO,type ProductXDTO,type UserSettings, type DataSourceDTO, type DataRecord, type TaskXDTO, type TasksStatsDTO, type ServiceDTO, type CatalogItemXResponseDTO, type ReviewDTO, type SearchSuggestionResponseDTO, type ObservatorySuggestionResponseDTO, type CatalogXDTO} from '@/types/index.types'
 import { useAuthStore } from '@/stores/auth'
 import type { VerifyDTO } from '@/types/index.types'
 // interface Observatory
@@ -219,7 +219,7 @@ export const useJubStore = defineStore('jub', () => {
     async function get_observatories(): Promise<ObservatoryDTO[]>  {
         try{
             isLoading.value = true;
-            const response = await fetch(`${API_URL}/observatories`);
+            const response = await fetch(`${API_URL}/observatories`, { headers: authHeaders() });
             if(response.ok){
                 const data:ObservatoryDTO[] = await response.json();
                 return data;
@@ -235,7 +235,7 @@ export const useJubStore = defineStore('jub', () => {
             isLoading.value = false
         }
     }
-    async function search_observatories(query:string,strict:boolean, skip = 0, limit = 24): Promise<ObservatoryDTO[]>{
+    async function search_observatories(query:string,strict:boolean, skip = 0, limit = 24, no_cache = false): Promise<ObservatoryDTO[]>{
         try{
             isLoading.value = true;
             const response = await fetch(`${API_URL}/search/observatories`, {
@@ -244,7 +244,7 @@ export const useJubStore = defineStore('jub', () => {
                     ...authHeaders(),
                     // 'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ query,strict, skip, limit })
+                body: JSON.stringify({ query, strict, skip, limit, no_cache })
             });
             if(response.ok){
                 const data:ObservatoryDTO[] = await response.json();
@@ -325,8 +325,10 @@ export const useJubStore = defineStore('jub', () => {
             formData.append('file', file, 'config.yml');
 
             // Ajusta la URL según el prefijo real de tu router (ej. /api/v2/search/code o /api/v2/code)
+            const { 'Content-Type': _ct, ...authOnly } = authHeaders();
             const response = await fetch(`${API_URL}/code`, {
                 method: 'POST',
+                headers: authOnly,
                 body: formData, // No agregues 'Content-Type', el navegador lo establece automáticamente como multipart/form-data
             });
 
@@ -353,7 +355,7 @@ export const useJubStore = defineStore('jub', () => {
         error.value   = null;
         catalog.value = null;
         try {
-            const response = await fetch(`${API_URL}/catalogs/${catalogId}`);
+            const response = await fetch(`${API_URL}/catalogs/${catalogId}`, { headers: authHeaders() });
             const data: CatalogResponseDTO = await response.json();
             catalog.value = data;
         } catch (e: any) {
@@ -436,9 +438,11 @@ export const useJubStore = defineStore('jub', () => {
   async function searchServices(query: string, skip = 0, limit = 100, strict = false): Promise<ServiceDTO[]> {
     try {
       isLoading.value = true;
+      const headers = authHeaders();
+      // console.log("Searching services with query:", query, "strict:", strict, headers);
       const response = await fetch(`${API_URL}/search/services`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({ query, skip, limit, strict }),
       });
       if (!response.ok) throw new Error(response.statusText);
@@ -832,6 +836,36 @@ export const useJubStore = defineStore('jub', () => {
       } catch { return false; }
     }
 
+    // ── Observatory catalogs (for Jub Assistant) ──────────────────────────────
+    const CATALOG_CACHE_SIZE = 3;
+    const _observatoryCatalogsCache = new Map<string, CatalogXDTO[]>();
+    const isLoadingObsCatalogs = ref(false);
+
+    async function fetchObservatoryCatalogs(observatoryId: string): Promise<CatalogXDTO[]> {
+      const cached = _observatoryCatalogsCache.get(observatoryId);
+      if (cached) return cached;
+
+      isLoadingObsCatalogs.value = true;
+      try {
+        const res = await fetch(`${API_URL}/observatories/${observatoryId}/catalogs`, {
+          headers: authHeaders(),
+        });
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await res.json() as CatalogXDTO[];
+        if (_observatoryCatalogsCache.size >= CATALOG_CACHE_SIZE) {
+          const oldest = _observatoryCatalogsCache.keys().next().value;
+          if (oldest !== undefined) _observatoryCatalogsCache.delete(oldest);
+        }
+        _observatoryCatalogsCache.set(observatoryId, data);
+        return data;
+      } catch (e) {
+        error.value = e instanceof Error ? e.message : String(e);
+        return [];
+      } finally {
+        isLoadingObsCatalogs.value = false;
+      }
+    }
+
     return {
         get_observatories,
         getObservatory,
@@ -885,6 +919,8 @@ export const useJubStore = defineStore('jub', () => {
         createReview,
         updateReview,
         deleteReview,
+        fetchObservatoryCatalogs,
+        isLoadingObsCatalogs,
     }
 
 })

@@ -42,9 +42,9 @@
     <!-- Paper cards -->
     <v-row>
       <v-col v-for="(paper, i) in filteredPapers" :key="i" cols="12">
+        
         <v-card rounded="xl" elevation="1" class="pa-1" hover>
           <v-card-text>
-
             <!-- Top row: type chip + download -->
             <div class="d-flex align-center mb-3 flex-wrap ga-2">
               <v-chip
@@ -76,6 +76,13 @@
             <div class="d-flex align-start ga-2 mb-3">
               <v-icon size="16" color="grey-darken-1" class="mt-1 flex-shrink-0">mdi-account-multiple-outline</v-icon>
               <span class="text-body-2 text-grey-darken-1">{{ paper.authors.join(', ') }}</span>
+            </div>
+
+            <div>
+              <v-icon size="16" color="grey-darken-1" class="mr-1" style="vertical-align: middle;">mdi-link-variant</v-icon>
+              <a :href="`https://doi.org/${paper.doi}`" target="_blank" rel="noopener" class="text-body-2 font-weight-medium" style="vertical-align: middle;">
+                {{ paper.doi }}
+              </a>
             </div>
 
             <!-- Abstract -->
@@ -135,6 +142,7 @@ interface Paper {
   abstract: string;
   keywords: string[];
   type: 'Journal Article' | 'Conference Paper';
+  doi: string;
   link: string;
 }
 
@@ -146,6 +154,7 @@ const papers: Paper[] = [
     keywords: ['AI', 'Machine Learning', 'Continuum Computing', 'Distributed Systems', 'Skeleton Model', 'NFR'],
     type: 'Journal Article',
     link: 'https://cinvestav365-my.sharepoint.com/:b:/g/personal/jose_morin_cinvestav_mx/IQCgxnP0zPraTKNsdLZ-C9pNAR2cSzrh-mQgEkbbUkSzA8g?e=72Mdhu',
+    doi: '10.3390/data10110191',
   },
   {
     title: 'A Mexican Enhanced Dataset of Pollutant Releases and Transfers (2004 to 2022) with IARC Cancer Classifications',
@@ -154,14 +163,16 @@ const papers: Paper[] = [
     keywords: ['Open Data', 'Cancer Classification', 'Environment', 'Geospatial', 'Public Health', 'IARC'],
     type: 'Journal Article',
     link: 'https://cinvestav365-my.sharepoint.com/:b:/g/personal/jose_morin_cinvestav_mx/IQDe86RGYuf6SZKQYPT_BrIZAWv9Y897iXi5H-PUiY4X3_8?e=QgFyDF',
+    doi: '10.1109/TSC.2024.3168615',
   },
   {
     title: 'APaC: A context-aware and availability policy as code framework for elastic object storage',
     authors: ['Ignacio Castillo-Barrios', 'J. L. Gonzalez-Compean', 'Ivan Lopez-Arevalo', 'Jose Juan Garcia-Hernandez'],
     abstract: 'Replication strategies provide availability for cloud storage, yet existing policies typically rely on static popularity metrics. These works struggle to react dynamically to contextual workload variations, specifically the temporal increments and decays in user concurrency and data consumption. This paper introduces APaC, a framework that combines a context-reactive replication method with an Availability Policy-as-Code programming model for storage systems to autonomously update availability policies and adapt at runtime to workload fluctuations. The APaC model defines replication policies through primitives that specify who, what, where, how, and when should replicate data. APaC outperformed state-of-the-art policies, achieving gains of 16.6% over time-distribution-based, 26% over object-lifetime-based, 34.6% over popularity-based strategies, and more than 70% over the baseline configuration.',
     keywords: ['Cloud Storage', 'Replication', 'Availability', 'Policy-as-Code', 'Elastic Storage', 'Workload'],
-    type: 'Conference Paper',
+    type: 'Journal Article',
     link: 'https://cinvestav365-my.sharepoint.com/:b:/g/personal/jose_morin_cinvestav_mx/IQC0Q7ZqlMyUT7iUWZO553HcAZjPPo6cNVpStKQxjSEi4ZA?e=RMmdRJ',
+    doi: '10.1109/TCC.2026.3693716',
   },
   {
     title: 'Turning data into insights in Jub, an extensible generic big data platform for life science and healthcare applications',
@@ -170,6 +181,7 @@ const papers: Paper[] = [
     keywords: ['Big Data', 'Life Science', 'FAIR Data', 'Observatories', 'Healthcare', 'AI', 'Cloud Storage'],
     type: 'Journal Article',
     link: 'https://cinvestav365-my.sharepoint.com/:b:/g/personal/jose_morin_cinvestav_mx/IQDDfZqWWm6PR7C-IpTn1dFhAeZbnKY553nPdENhGJpdUw0?e=e1dCxD',
+    doi: '10.1038/s41598-025-32196-3',
   },
   {
     title: 'A Computer-aided Framework for Detecting Osteosarcoma in Computed Tomography Scans',
@@ -178,6 +190,7 @@ const papers: Paper[] = [
     keywords: ['Machine Learning', 'Medical Imaging', 'CNN', 'Bone Cancer', 'Osteosarcoma', 'CT Scans'],
     type: 'Conference Paper',
     link: 'https://cinvestav365-my.sharepoint.com/:b:/g/personal/jose_morin_cinvestav_mx/IQDg0tWUYofWRJxblqT62amSARikCu7LXOPniuD0RxV9rQ4?e=56YINc',
+    doi: '10.48550/arXiv.2603.13376',
   },
   {
     title: 'CIATfunc: A frame-based serverless framework for composing secure End-to-End applications',
@@ -186,6 +199,7 @@ const papers: Paper[] = [
     keywords: ['Serverless', 'End-to-End Security', 'Blockchain', 'Cloud Storage', 'Policy-as-Code', 'Infrastructure-as-Code'],
     type: 'Journal Article',
     link: 'https://cinvestav365-my.sharepoint.com/:b:/g/personal/jose_morin_cinvestav_mx/IQDuuyBSWLZUQp0-yEn31U6tAZxpWnhPsYPLY2an4ucpdJU?e=K9Pp9o',
+    doi: '10.1109/TSC.2024.3168616',
   },
   {
     title: 'OsteoCAD: A Human-in-the-Loop Cloud–Edge Framework for Bone Tumor Segmentation',
@@ -194,6 +208,7 @@ const papers: Paper[] = [
     keywords: ['Deep Learning', 'eHealth', 'Medical Image Analysis', 'Data Privacy', 'Tumor Segmentation', 'Cloud-Edge'],
     type: 'Conference Paper',
     link: 'https://cinvestav365-my.sharepoint.com/:b:/g/personal/jose_morin_cinvestav_mx/IQBvRTmKTX1BSY68LuvbMF25ATBxBGfIHg8cEZ1jX4pHgYY?e=zC5AE0',
+    doi: '10.1109/TSC.2024.3168617',
   },
 ];
 
